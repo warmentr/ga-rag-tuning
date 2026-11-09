@@ -1,0 +1,16 @@
+# Search space: values per gene. The full grid is the Cartesian product,
+# minus invalid configs (see `validity`).
+# 5 x 4 x 3 x 2 x 5 = 600 combinations; 30 invalid (overlap 128 on size 128)
+# -> 570 valid configs.
+
+genes:
+  chunk_size: [128, 192, 256, 384, 512]   # tokens, measured with the embedding model's tokenizer
+  chunk_overlap: [0, 32, 64, 128]         # tokens, absolute
+  retrieval_type: [bm25, dense, hybrid]   # hybrid = reciprocal rank fusion of bm25 + dense
+  reranker: [false, true]                 # rerank the top_k retrieved chunks with the cross-encoder
+  top_k: [5, 10, 20, 30, 50]              # chunks retrieved (first-stage depth / rerank pool)
+
+validity:
+  # A config is invalid if any rule is violated. Both search methods
+  # handle invalid configs identically (resample).
+  - chunk_overlap < chunk_size
