@@ -37,6 +37,17 @@ retrieval. See README.md for the full design and file structure.
   caps chunk_size; queries use the bge search prefix), reranker
   `cross-encoder/ms-marco-MiniLM-L-6-v2`. Chunk sizes are measured with the
   embedding model's tokenizer. Hardware: RTX 2080 Ti (11 GB).
+- Chunking (`src/ragtune/pipeline/chunking.py`): chunk_size = total tokens
+  the embedder sees INCLUDING [CLS]/[SEP] (content = size - 2, so 512 fits
+  bge with no truncation); overlap in content tokens. Boundaries snap to word
+  starts (end back, next start forward), so actual overlap <= configured.
+  Text sliced from the original by char offsets. `contents` chunked as-is
+  (starts with the title); title not prepended to later chunks.
+  Full corpus: 9.8k chunks (512/0) to 46k (128/64); 73.7M tokens to embed
+  across all 19 chunkings; ~2 s to chunk per setting.
+- Vector store: plain NumPy exact search (normalized embeddings, inner
+  product). No ANN, so the lookup table has no approximation noise.
+- BM25: `bm25s`, lowercase + English stopwords.
 - Grid-cost plan: embed once per valid chunking (19). Retrieve top 50 once
   per (chunking, retrieval type); smaller top_k for bm25/dense are prefixes.
   Cross-encoder scores are pointwise, so score each (question, chunk) pair
@@ -50,10 +61,15 @@ retrieval. See README.md for the full design and file structure.
 - Python in `.venv` (run as `.venv/Scripts/python`); scripts in `scripts/`
   (run in numbered order, from the repo root), logic in `src/ragtune/`.
 - Never commit raw data. Parameters live in `config/`, not hard-coded.
-- Every run is deterministic given (method, budget, seed).
+- Every run is deterministic given (method, budget, seed). Pass a
+  `numpy.random.Generator` explicitly; no global RNG.
+- Tests: `.venv/Scripts/python -m pytest` (pyproject sets `pythonpath = src`).
+- Search space (`src/ragtune/space.py`): a genome is a tuple of value indices,
+  one per gene, in YAML gene order. `Config.key` is the lookup-table key.
+  Invalid configs go through `SearchSpace.repair` in BOTH methods: genes in
+  violated rules are resampled jointly until valid, so random search
+  (uniform genome + repair) is uniform over the 570 valid configs.
 
 ## Open decisions
-- Vector store / index type (fixed, not a gene)
-- BM25 implementation and tokenization
 - Seed count (set after timing a run of each method)
 - GA parameters (`config/ga_params.yaml`, frozen before any comparison)

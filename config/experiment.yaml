@@ -16,6 +16,11 @@ pipeline:                  # fixed across all configs (not genes)
   embedding_query_prefix: "Represent this sentence for searching relevant passages: "
   reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
   rrf_k: 60                # reciprocal rank fusion constant for hybrid retrieval
+  vector_store: numpy_exact  # normalized embeddings, exact inner-product search (no ANN noise)
+  bm25:
+    library: bm25s
+    lowercase: true
+    stopwords: en
 
 fitness:
   metric: ndcg
@@ -27,5 +32,4 @@ fitness:
 budgets: [0.05, 0.10, 0.20]  # fraction of unique valid configs , rounded down (570 -> 28, 57, 114)
 
 # Still open (see CLAUDE.md):
-# vector_store:
 # seeds:
