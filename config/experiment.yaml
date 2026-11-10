@@ -3,6 +3,7 @@
 paths:
   raw_dir: data/raw
   splits: data/processed/splits.json
+  cache_dir: data/cache        # embedding caches (gitignored)
 
 split:
   seed: 42
@@ -13,14 +14,22 @@ corpus:
 
 pipeline:                  # fixed across all configs (not genes)
   embedding_model: BAAI/bge-small-en-v1.5   # 512-token max input; caps chunk_size
+  embedding_dtype: float32  # fp16 is 2.5x faster but not needed (~13 min for all 19 chunkings)
+  embedding_batch_size: 64
   embedding_query_prefix: "Represent this sentence for searching relevant passages: "
   reranker_model: cross-encoder/ms-marco-MiniLM-L-6-v2
+  reranker_dtype: float32
+  reranker_batch_size: 64
+  reranker_max_length: 512  # (question, chunk) pairs over this are truncated on the chunk side
   rrf_k: 60                # reciprocal rank fusion constant for hybrid retrieval
   vector_store: numpy_exact  # normalized embeddings, exact inner-product search (no ANN noise)
   bm25:
     library: bm25s
     lowercase: true
     stopwords: en
+    k1: 1.5
+    b: 0.75
+    method: lucene
 
 fitness:
   metric: ndcg
@@ -29,7 +38,7 @@ fitness:
   relevance: binary        # article relevant iff in the question's article_ids
   # ideal DCG assumes min(len(article_ids), k) relevant articles at the top
 
-budgets: [0.05, 0.10, 0.20]  # fraction of unique valid configs , rounded down (570 -> 28, 57, 114)
+budgets: [0.05, 0.10, 0.20]  # fraction of unique valid configs, rounded down (570 -> 28, 57, 114)
 
 # Still open (see CLAUDE.md):
 # seeds:

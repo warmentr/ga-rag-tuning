@@ -1,1 +1,6 @@
 /data/raw/*
+/data/cache/
+/results/lookup_table/parts/
+__pycache__/
+*.pyc
+.pytest_cache/

@@ -1,6 +1,11 @@
+# torch must be the CUDA build; install it first:
+#   .venv/Scripts/python -m pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126
+torch==2.14.1
+sentence-transformers
+bm25s
+tokenizers
+datasets
 pandas
 numpy
-datasets
 pyyaml
 pytest
-tokenizers
