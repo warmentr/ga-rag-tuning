@@ -6,6 +6,7 @@ bm25s
 tokenizers
 datasets
 pandas
+matplotlib
 numpy
 pyyaml
 pytest
